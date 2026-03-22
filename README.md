@@ -1,107 +1,121 @@
-# ⚛ QuantumShield — PQC Scanner
-### PNB Cybersecurity Hackathon 2025-26 | Theme: Quantum-Proof Systems
+# QuantumShield v2.0 — Production-Ready PQC Scanner
 
-> **"Quantum-Ready Cybersecurity for Future-Safe Banking"**
+**Post-Quantum Cryptography Scanner with Auth, Database & Scan History**
 
 ---
 
-## 🎯 Problem Statement
-Develop a software scanner to validate deployment of Quantum-proof ciphers and create a Cryptographic Bill of Materials (CBOM) inventory for public-facing applications.
+## What's New in v2.0
 
-## 🏗️ Architecture
+- ✅ JWT authentication with SQLite database
+- ✅ Role-based access control (Admin / Operator / Checker / Viewer)
+- ✅ Full scan history persisted to database
+- ✅ Audit logs for every login, scan, and action
+- ✅ Admin panel for user management
+- ✅ Password change functionality
+- ✅ Auto-seeds 3 default users on first run
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    QuantumShield                         │
-├──────────────────┬──────────────────────────────────────┤
-│   React Frontend │         FastAPI Backend               │
-│   (Port 3000)    │         (Port 8000)                   │
-│                  │                                       │
-│  • Dashboard     │  • TLS Deep Inspector                 │
-│  • CBOM Viewer   │  • Certificate Parser                 │
-│  • PQC Scoring   │  • CBOM Generator (CycloneDX v1.4)   │
-│  • Batch Scanner │  • PQC Assessment Engine             │
-│  • Report Export │  • REST API                          │
-└──────────────────┴──────────────────────────────────────┘
-```
+---
 
-## ✨ Key Features
+## Quick Start (Local)
 
-### 🔍 Scanner Capabilities
-- **TLS Inspection**: Full handshake analysis — cipher suites, protocol versions, key exchange
-- **Certificate Analysis**: X.509 certificate parsing, key type/size, SANs, validity, CA chain
-- **HTTP Security Headers**: HSTS, CSP, X-Frame-Options analysis
-- **Batch Scanning**: Up to 20 public-facing assets simultaneously
-
-### 📜 CBOM (Cryptographic Bill of Materials)
-- CycloneDX v1.4 compliant CBOM generation
-- Per-asset cryptographic component inventory
-- JSON export for integration with GRC tools
-- NIST SP 800-235 aligned
-
-### 🏆 PQC Assessment & Certification
-- **PQC Score (0–100)** based on NIST FIPS 203/204/205 compliance
-- **Quantum-Safe Labels**: Automatically issues "Fully Quantum Safe" / "PQC Ready" / "Vulnerable" badges
-- Actionable remediation roadmap for each asset
-
-### ⚛ NIST PQC Standards Supported
-| Standard | Algorithm | Type | Security Level |
-|----------|-----------|------|---------------|
-| FIPS 203 | ML-KEM-768 | Key Encapsulation | Level 3 (★ Recommended) |
-| FIPS 204 | ML-DSA-65 | Digital Signature | Level 3 (★ Recommended) |
-| FIPS 205 | SLH-DSA-SHA2-192s | Hash Signature | Level 3 |
-
-## 🚀 Quick Start
-
-### Option 1: Docker (Recommended)
-```bash
-git clone <repo>
-cd quantumshield
-docker compose up -d
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8000/docs
-```
-
-### Option 2: Local Development
 ```bash
 # Backend
 cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 
-# Frontend
+# Frontend (new terminal)
 cd frontend
 npm install
 npm run dev
 ```
 
-## 📡 API Endpoints
+Frontend: http://localhost:5173  
+Backend API docs: http://localhost:8000/docs
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/scan/quick` | Quick single-target TLS scan |
-| POST | `/api/v1/scan/batch` | Start async batch scan job |
-| GET | `/api/v1/scan/job/{id}` | Get scan job results |
-| GET | `/api/v1/scan/jobs` | List all scan jobs |
-| POST | `/api/v1/reports/cbom` | Generate CBOM report |
-| GET | `/api/v1/reports/badge/{target}` | Get PQC badge for asset |
-| GET | `/api/v1/algorithms/pqc` | NIST PQC algorithm reference |
+---
 
-## 🔐 PQC Scoring Methodology
+## Docker
 
-| Score | Status | Meaning |
-|-------|--------|---------|
-| 85–100 | 🟢 QUANTUM SAFE | NIST PQC algorithms deployed |
-| 65–84 | 🟡 PQC READY | Hybrid PQC, strong classical |
-| 40–64 | 🟠 TRANSITIONING | Partial migration needed |
-| 0–39 | 🔴 VULNERABLE | Immediate action required |
+```bash
+docker compose up -d
+```
 
-## 🛡️ Addressing HNDL (Harvest Now, Decrypt Later)
-The scanner specifically identifies:
-- RSA/ECDSA certificates vulnerable to Shor's algorithm
-- ECDHE/DHE key exchanges that leak to quantum adversaries
-- Legacy ciphers (3DES, RC4) that are classically AND quantumly broken
-- TLS versions (1.0, 1.1) with known vulnerabilities
+Frontend: http://localhost:3000  
+Backend: http://localhost:8000
 
-## 📋 Team
-PNB Cybersecurity Hackathon 2025-26 Submission
+---
+
+## Default Login Credentials
+
+| Username | Password     | Role     |
+|----------|-------------|----------|
+| admin    | quantum2026 | Admin    |
+| pnb      | pnbsecure   | Operator |
+| auditor  | audit2026   | Checker  |
+
+---
+
+## Deploy to Render + Vercel (Free)
+
+### Backend (Render)
+1. New Web Service → connect GitHub repo
+2. Root Directory: `backend`
+3. Build Command: `pip install -r requirements.txt`
+4. Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Add environment variables:
+   - `SECRET_KEY` = (random long string)
+   - `ADMIN_REGISTER_KEY` = (secret for creating users)
+
+### Frontend (Vercel)
+1. New Project → connect GitHub repo
+2. Root Directory: `frontend`
+3. Framework: Vite
+4. Add environment variable:
+   - `VITE_BACKEND_URL` = https://your-backend.onrender.com
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | /api/v1/auth/login | No | Get JWT token |
+| GET | /api/v1/auth/me | Yes | Current user info |
+| POST | /api/v1/auth/register | Admin key | Create user |
+| GET | /api/v1/auth/users | Admin | List all users |
+| GET | /api/v1/auth/audit-logs | Admin | Audit trail |
+| POST | /api/v1/scan/quick | Optional | Single target scan |
+| POST | /api/v1/scan/batch | Operator+ | Batch scan (async) |
+| GET | /api/v1/history/ | Yes | Scan history |
+| GET | /api/v1/history/stats/summary | Yes | History stats |
+| GET | /api/v1/health | No | Health check |
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SECRET_KEY` | qs-jwt-secret-2026 | JWT signing key — CHANGE IN PRODUCTION |
+| `ADMIN_REGISTER_KEY` | qs-admin-key-2026 | Key required to create new users |
+| `DATABASE_URL` | sqlite:///./quantumshield.db | Database URL |
+
+---
+
+## Keep Render Backend Alive (Free Tier)
+
+Sign up at uptimerobot.com → Monitor:
+- URL: `https://your-backend.onrender.com/api/v1/health`
+- Interval: Every 5 minutes
+- This prevents the 30-second cold start.
+
+---
+
+## Tech Stack
+
+- **Backend:** Python 3.11 + FastAPI + SQLAlchemy + SQLite + JWT
+- **Frontend:** React 18 + Vite
+- **Auth:** bcrypt passwords + HS256 JWT (8 hour expiry)
+- **DB:** SQLite (dev/free tier) — swap `DATABASE_URL` for PostgreSQL
+- **PQC:** NIST FIPS 203 (ML-KEM), FIPS 204 (ML-DSA), FIPS 205 (SLH-DSA)
